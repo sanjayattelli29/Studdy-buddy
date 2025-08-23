@@ -47,7 +47,7 @@ const Footer = () => {
           </h2>
           <div className="flex flex-col items-center gap-4">
             <a 
-              href="https://www.linkedin.com/in/shashank-palingi-29ba8731b/" 
+              href="https://www.linkedin.com/in/attelli-sanjay-kumar/" 
               style={{
                 color:"lightgreen",
                 fontFamily: "'Press Start 2P', cursive",
@@ -58,7 +58,7 @@ const Footer = () => {
               linkedin
             </a> 
             <a 
-              href="https://github.com/shashankpalingi" 
+              href="https://github.com/sanjayattelli29" 
               style={{
                 color:"lightgreen",
                 fontFamily: "'Press Start 2P', cursive",
