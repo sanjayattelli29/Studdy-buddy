@@ -82,7 +82,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       clearError();
       const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Login successful for:', email);
+      console.log('Login successfulled for:', email);
       return result;
     } catch (error: any) {
       console.error('Detailed Login Error:', {
