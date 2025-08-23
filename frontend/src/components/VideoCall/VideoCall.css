@@ -1,0 +1,373 @@
+.video-call-container {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+}
+
+.video-call-interface {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.video-call-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px 16px 0 0;
+}
+
+.video-call-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  color: #0066cc;
+}
+
+.active-users {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Improved video grid layout */
+.videos-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  padding: 0.75rem;
+  overflow: auto;
+  height: calc(100% - 120px);
+  background-color: rgba(245, 247, 250, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+/* Local video styles */
+.local-video-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: fit-content;
+  max-height: 240px;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
+  transition: all 0.3s ease;
+}
+
+.local-video-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(31, 38, 135, 0.2);
+}
+
+.local-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* Mirror local video */
+  border-radius: 12px;
+}
+
+.local-video-container video.disabled {
+  opacity: 0.5;
+}
+
+.video-disabled-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 12px;
+}
+
+/* Remote video container improvements */
+.remote-video-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(31, 38, 135, 0.15);
+  transition: all 0.3s ease;
+}
+
+.remote-video-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 16px rgba(31, 38, 135, 0.2);
+}
+
+.remote-video-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.remote-video-container .video-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Connection status indicators */
+.remote-video-container.connecting .video-label,
+.remote-video-container.error .video-label {
+  background: rgba(255, 165, 0, 0.7); /* Orange for connecting/error */
+}
+
+.remote-video-container.disconnected .video-label {
+  background: rgba(255, 0, 0, 0.7); /* Red for disconnected */
+}
+
+/* Connection state styling */
+.remote-video-container.connecting::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 12px;
+}
+
+.remote-video-container.error {
+  border: 1px solid rgba(255, 77, 77, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.2);
+}
+
+.remote-video-container.error::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 77, 77, 0.1);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 12px;
+}
+
+/* Video labels */
+.video-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #333;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-top: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Controls */
+.video-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-top: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 0 0 16px 16px;
+}
+
+.control-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.7);
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 8px rgba(31, 38, 135, 0.1);
+}
+
+.control-button:hover {
+  background-color: rgba(255, 255, 255, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(31, 38, 135, 0.15);
+}
+
+.control-button.active {
+  background-color: rgba(93, 63, 211, 0.1);
+  color: #5d3fd3;
+  border: 1px solid rgba(93, 63, 211, 0.3);
+}
+
+.control-button.inactive {
+  background-color: rgba(255, 77, 77, 0.1);
+  color: #992b2b;
+  border: 1px solid rgba(255, 77, 77, 0.3);
+}
+
+.control-button.end-call {
+  background-color: rgba(255, 77, 77, 0.8);
+  color: white;
+  border: 1px solid rgba(255, 77, 77, 0.3);
+}
+
+.control-button.end-call:hover {
+  background-color: rgba(255, 77, 77, 1);
+}
+
+/* Connecting overlay */
+.connecting-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 100;
+  border-radius: 16px;
+}
+
+.connecting-overlay.error {
+  background-color: rgba(255, 77, 77, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.connecting-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(93, 63, 211, 0.1);
+  border-left-color: #5d3fd3;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.25rem;
+}
+
+.connecting-tip {
+  color: #666;
+  font-size: 0.95rem;
+  max-width: 80%;
+  text-align: center;
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .videos-container {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.5rem;
+    height: calc(100% - 100px);
+  }
+  
+  .local-video-container {
+    max-width: 200px;
+    max-height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .videos-container {
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
+    height: calc(100% - 80px);
+  }
+  
+  .local-video-container {
+    max-width: 150px;
+    max-height: 100px;
+  }
+  
+  .video-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px;
+  margin: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(31, 38, 135, 0.05);
+}
+
+.empty-state h3 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: #666;
+  max-width: 500px;
+} 
