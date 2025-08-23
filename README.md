@@ -98,7 +98,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 🌐 Contact
 
-Project Link: [https://studybuddy08.netlify.app/](https://studybuddy08.netlify.app/)
+Project Link: [https://studdy-buddy-29.netlify.app/](https://studdy-buddy-29.netlify.app/)
 
 ---
 
