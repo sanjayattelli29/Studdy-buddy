@@ -54,6 +54,34 @@ service cloud.firestore {
       );
     }
     
+    // PDF Folders - Top-level collection for organizing PDFs by room
+    match /pdfFolders/{folderId} {
+      allow read: if isAuthenticated() && resource.data.roomId != null;
+      allow create: if isAuthenticated() && request.resource.data.roomId != null;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.createdBy ||
+        get(/databases/$(database)/documents/studyRooms/$(resource.data.roomId)).data.createdBy == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.createdBy ||
+        get(/databases/$(database)/documents/studyRooms/$(resource.data.roomId)).data.createdBy == request.auth.uid
+      );
+    }
+    
+    // PDF Files - Top-level collection for PDF documents
+    match /pdfFiles/{fileId} {
+      allow read: if isAuthenticated() && resource.data.roomId != null;
+      allow create: if isAuthenticated() && request.resource.data.roomId != null;
+      allow update: if isAuthenticated() && (
+        request.auth.uid == resource.data.uploadedBy ||
+        get(/databases/$(database)/documents/studyRooms/$(resource.data.roomId)).data.createdBy == request.auth.uid
+      );
+      allow delete: if isAuthenticated() && (
+        request.auth.uid == resource.data.uploadedBy ||
+        get(/databases/$(database)/documents/studyRooms/$(resource.data.roomId)).data.createdBy == request.auth.uid
+      );
+    }
+    
     // Study Rooms - Modified to allow any authenticated user to delete rooms
     match /studyRooms/{roomId} {
       allow read: if isAuthenticated();

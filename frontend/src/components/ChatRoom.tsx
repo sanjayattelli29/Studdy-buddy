@@ -13,6 +13,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { db } from '../lib/firebase';
+import { mentionService } from '../services/mentionService';
 import './ChatRoom.css';
 import { Video, Image, Phone, Users } from 'lucide-react';
 import VideoCallComponent from './VideoCall';
@@ -29,9 +30,10 @@ interface Message {
 
 interface ChatRoomProps {
   roomId: string;
+  roomName?: string;
 }
 
-const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
+const ChatRoom: React.FC<ChatRoomProps> = ({ roomId, roomName }) => {
   const { currentUser, userProfile } = useAuth();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
@@ -44,6 +46,33 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   
+  // Mention autocomplete states
+  const [showMentionDropdown, setShowMentionDropdown] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [roomParticipants, setRoomParticipants] = useState<{uid: string, displayName: string, email: string}[]>([]);
+  const [filteredParticipants, setFilteredParticipants] = useState<{uid: string, displayName: string, email: string}[]>([]);
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [showMentionHelp, setShowMentionHelp] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Load room participants for mention autocomplete
+  useEffect(() => {
+    if (!roomId) return;
+
+    const loadParticipants = async () => {
+      try {
+        const participants = await mentionService.getRoomParticipants(roomId);
+        // Filter out current user from mentions
+        const otherParticipants = participants.filter(p => p.uid !== currentUser?.uid);
+        setRoomParticipants(otherParticipants);
+      } catch (error) {
+        console.error('Error loading room participants:', error);
+      }
+    };
+
+    loadParticipants();
+  }, [roomId, currentUser?.uid]);
+
   // Check for active calls in the room
   useEffect(() => {
     if (!roomId) return;
@@ -139,6 +168,14 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
         createdAt: serverTimestamp()
       });
       
+      // Process mentions for email notifications
+      const senderName = userProfile?.displayName || 'Anonymous';
+      const currentRoomName = roomName || 'Study Room';
+      
+      // Process mentions asynchronously (don't block message sending)
+      mentionService.processMentions(message, roomId, currentRoomName, senderName)
+        .catch(error => console.error('Error processing mentions:', error));
+      
       setMessage('');
     } catch (err) {
       console.error('Error sending message:', err);
@@ -151,6 +188,121 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
     
     const date = timestamp.toDate();
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const renderMessageWithMentions = (text: string) => {
+    const mentionRegex = /@(\w+)/g;
+    const parts = text.split(mentionRegex);
+    
+    return parts.map((part, index) => {
+      if (index % 2 === 1) {
+        // This is a mention (every odd index after split)
+        return (
+          <span key={index} className="mention">
+            @{part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
+  // Handle message input changes and mention detection
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setMessage(value);
+
+    // Check for mention trigger (@)
+    const cursorPosition = e.target.selectionStart || 0;
+    const textBeforeCursor = value.substring(0, cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const textAfterAt = textBeforeCursor.substring(lastAtIndex + 1);
+      
+      // Check if we're in a mention (no spaces after @)
+      if (!textAfterAt.includes(' ') && textAfterAt.length >= 0) {
+        setMentionQuery(textAfterAt.toLowerCase());
+        setSelectedMentionIndex(0);
+        
+        // Filter participants based on query
+        const filtered = roomParticipants.filter(participant =>
+          participant.displayName.toLowerCase().includes(textAfterAt.toLowerCase()) ||
+          participant.email.toLowerCase().includes(textAfterAt.toLowerCase())
+        );
+        setFilteredParticipants(filtered);
+        
+        // Show dropdown if we have participants or show help if no participants
+        if (filtered.length > 0 || roomParticipants.length === 0) {
+          setShowMentionDropdown(true);
+          setShowMentionHelp(roomParticipants.length === 0);
+        } else {
+          setShowMentionDropdown(false);
+          setShowMentionHelp(false);
+        }
+      } else {
+        setShowMentionDropdown(false);
+        setShowMentionHelp(false);
+      }
+    } else {
+      setShowMentionDropdown(false);
+      setShowMentionHelp(false);
+    }
+  };
+
+  // Handle keyboard navigation in mention dropdown
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showMentionDropdown) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedMentionIndex(prev => 
+          prev < filteredParticipants.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedMentionIndex(prev => 
+          prev > 0 ? prev - 1 : filteredParticipants.length - 1
+        );
+        break;
+      case 'Enter':
+        if (filteredParticipants.length > 0) {
+          e.preventDefault();
+          selectMention(filteredParticipants[selectedMentionIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowMentionDropdown(false);
+        break;
+    }
+  };
+
+  // Select a user from mention dropdown
+  const selectMention = (participant: {uid: string, displayName: string, email: string}) => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    const cursorPosition = input.selectionStart || 0;
+    const textBeforeCursor = message.substring(0, cursorPosition);
+    const textAfterCursor = message.substring(cursorPosition);
+    const lastAtIndex = textBeforeCursor.lastIndexOf('@');
+    
+    if (lastAtIndex !== -1) {
+      const beforeAt = textBeforeCursor.substring(0, lastAtIndex);
+      const newMessage = beforeAt + `@${participant.displayName} ` + textAfterCursor;
+      setMessage(newMessage);
+      
+      // Set cursor position after the mention
+      setTimeout(() => {
+        const newCursorPos = beforeAt.length + participant.displayName.length + 2;
+        input.setSelectionRange(newCursorPos, newCursorPos);
+        input.focus();
+      }, 0);
+    }
+    
+    setShowMentionDropdown(false);
   };
 
   const handleImageClick = () => {
@@ -270,7 +422,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
                       <span className="message-author">{msg.userName}</span>
                       <span className="message-time">{formatTime(msg.createdAt)}</span>
                     </div>
-                    <div className="message-text">{msg.text}</div>
+                    <div className="message-text">{renderMessageWithMentions(msg.text)}</div>
                     {msg.imageUrl && (
                       <div className="message-image">
                         <img src={msg.imageUrl} alt="Shared" />
@@ -292,13 +444,57 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ roomId }) => {
             >
               <Image size={20} />
             </button>
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message..."
-              disabled={!currentUser || uploadingImage}
-            />
+            <div className="input-container">
+              <input
+                ref={inputRef}
+                type="text"
+                value={message}
+                onChange={handleMessageChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Type your message... Use @ to mention users"
+                disabled={!currentUser || uploadingImage}
+                title="Type @ to mention other participants in the room"
+              />
+              
+              {/* Mention Dropdown */}
+              {showMentionDropdown && (
+                <div className="mention-dropdown">
+                  {showMentionHelp ? (
+                    <div className="mention-help">
+                      <div className="mention-help-icon">💬</div>
+                      <div className="mention-help-text">
+                        <div className="mention-help-title">No other participants yet</div>
+                        <div className="mention-help-subtitle">Invite others to join this room to mention them!</div>
+                      </div>
+                    </div>
+                  ) : filteredParticipants.length > 0 ? (
+                    filteredParticipants.map((participant, index) => (
+                      <div
+                        key={participant.uid}
+                        className={`mention-item ${index === selectedMentionIndex ? 'selected' : ''}`}
+                        onClick={() => selectMention(participant)}
+                      >
+                        <div className="mention-avatar">
+                          {participant.displayName.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="mention-info">
+                          <div className="mention-name">{participant.displayName}</div>
+                          <div className="mention-email">{participant.email}</div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="mention-help">
+                      <div className="mention-help-icon">🔍</div>
+                      <div className="mention-help-text">
+                        <div className="mention-help-title">No matches found</div>
+                        <div className="mention-help-subtitle">Try typing a different name</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             <input 
               type="file" 
               ref={fileInputRef} 

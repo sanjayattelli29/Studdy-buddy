@@ -8,7 +8,8 @@ import {
   Vote, 
   Pencil, 
   Youtube,
-  Users
+  Users,
+  BookOpen
 } from 'lucide-react';
 import { ContainerScroll } from './ui/container-scroll-animation';
 import { AnimatedBackground } from './ui/animated-background';
@@ -101,6 +102,11 @@ const FeaturesSection = () => {
         icon: <FileText className="w-6 h-6 text-violet-500" />,
         title: "Collaborative Notes",
         description: "Take and share notes together"
+      },
+      {
+        icon: <BookOpen className="w-6 h-6 text-violet-500" />,
+        title: "PDF Discussion",
+        description: "Upload, organize, and discuss PDF documents in folders"
       },
       {
         icon: <Pencil className="w-6 h-6 text-violet-500" />,

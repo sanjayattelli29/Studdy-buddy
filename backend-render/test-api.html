@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyBuddy Backend API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        h1,
+        h2 {
+            color: #333;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        
+        .success {
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+        
+        .error {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        
+        input[type="email"],
+        input[type="file"] {
+            margin: 5px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>StudyBuddy Backend API Test</h1>
+    <p>Test the backend-render API endpoints before deployment</p>
+
+    <div class="container">
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <div id="healthResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. R2 Configuration Test</h2>
+        <button onclick="testR2Config()">Test R2 Configuration</button>
+        <div id="r2ConfigResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. File Upload Test</h2>
+        <input type="file" id="fileInput" accept=".pdf,.jpg,.png,.jpeg">
+        <button onclick="testFileUpload()">Upload Test File</button>
+        <div id="uploadResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>4. Email Notification Test</h2>
+        <input type="email" id="emailInput" placeholder="Enter test email">
+        <button onclick="testEmail()">Send Test Email</button>
+        <div id="emailResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>5. Mention Notification Test</h2>
+        <input type="email" id="mentionEmailInput" placeholder="Enter email for mention">
+        <button onclick="testMention()">Send Test Mention</button>
+        <div id="mentionResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:3001';
+
+        async function testHealth() {
+            const resultDiv = document.getElementById('healthResult');
+            try {
+                resultDiv.textContent = 'Testing health endpoint...';
+
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Health Check Passed!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Health Check Failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Health Check Error!\n\n${error.message}`;
+            }
+        }
+
+        async function testR2Config() {
+            const resultDiv = document.getElementById('r2ConfigResult');
+            try {
+                resultDiv.textContent = 'Testing R2 configuration...';
+
+                const response = await fetch(`${API_BASE_URL}/api/test-r2`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ R2 Configuration Test Passed!\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ R2 Configuration Test Failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ R2 Configuration Test Error!\n\n${error.message}`;
+            }
+        }
+
+        async function testFileUpload() {
+            const resultDiv = document.getElementById('uploadResult');
+            const fileInput = document.getElementById('fileInput');
+
+            if (!fileInput.files[0]) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ Please select a file first!';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = 'Testing file upload...';
+
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('folder', 'test-uploads');
+
+                const response = await fetch(`${API_BASE_URL}/api/r2/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ File Upload Test Passed!\n\nFile URL: ${data.url}\nPublic ID: ${data.public_id}\nSize: ${data.size} bytes`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ File Upload Test Failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ File Upload Test Error!\n\n${error.message}`;
+            }
+        }
+
+        async function testEmail() {
+            const resultDiv = document.getElementById('emailResult');
+            const emailInput = document.getElementById('emailInput');
+
+            if (!emailInput.value) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ Please enter an email address!';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = 'Testing email notification...';
+
+                const response = await fetch(`${API_BASE_URL}/api/notifications/test`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientEmail: emailInput.value
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Email Test Passed!\n\nMessage ID: ${data.messageId}\nRecipient: ${data.recipient}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Email Test Failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Email Test Error!\n\n${error.message}`;
+            }
+        }
+
+        async function testMention() {
+            const resultDiv = document.getElementById('mentionResult');
+            const emailInput = document.getElementById('mentionEmailInput');
+
+            if (!emailInput.value) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = '❌ Please enter an email address!';
+                return;
+            }
+
+            try {
+                resultDiv.textContent = 'Testing mention notification...';
+
+                const response = await fetch(`${API_BASE_URL}/api/notifications/send-mention`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        recipientEmail: emailInput.value,
+                        mentionedByName: 'Test User',
+                        roomTitle: 'Test Study Room',
+                        message: 'This is a test mention @user from the API test!',
+                        roomId: 'test-room-123'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✅ Mention Notification Test Passed!\n\nMessage ID: ${data.messageId}\nRecipient: ${data.recipient}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `❌ Mention Notification Test Failed!\n\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `❌ Mention Notification Test Error!\n\n${error.message}`;
+            }
+        }
+
+        // Auto-test health on page load
+        window.onload = function() {
+            testHealth();
+        };
+    </script>
+</body>
+
+</html>

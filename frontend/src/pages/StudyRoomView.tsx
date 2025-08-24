@@ -11,6 +11,7 @@ import Whiteboard from '../components/Whiteboard';
 import YoutubeWatchTogether from '../components/YoutubeWatchTogether/YoutubeWatchTogether';
 import AIChatAssistant from '../components/AI/AIChatAssistant';
 import VideoRoom from '../components/VideoCall/VideoRoom';
+import PdfDiscussion from '../components/PdfDiscussion';
 import { db } from '../lib/firebase';
 import { doc, getDoc, onSnapshot, updateDoc, setDoc } from 'firebase/firestore';
 
@@ -26,7 +27,7 @@ import { StudyRoom } from '../types/studyRoom';
 import './StudyRoomView.css';
 
 
-type Feature = 'notes' | 'files' | 'timer' | 'tasks' | 'polls' | 'whiteboard' | 'youtube' | 'chat' | 'aichat' | 'video';
+type Feature = 'notes' | 'files' | 'timer' | 'tasks' | 'polls' | 'whiteboard' | 'youtube' | 'chat' | 'aichat' | 'video' | 'pdfs';
 
 // Timer mode type
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
@@ -567,7 +568,7 @@ const StudyRoomView: React.FC = () => {
   // Handle feature change
   const changeActiveFeature = (feature: Feature) => {
     // Validate feature
-    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video'];
+    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video', 'pdfs'];
     if (!validFeatures.includes(feature)) {
       console.warn(`Invalid feature: ${feature}. Defaulting to 'notes'.`);
       feature = 'notes';
@@ -590,14 +591,14 @@ const StudyRoomView: React.FC = () => {
   
   const renderFeatureContent = () => {
     // Add type guard to ensure activeFeature is a valid Feature
-    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video'];
+    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video', 'pdfs'];
     const feature = validFeatures.includes(activeFeature) ? activeFeature : 'notes';
 
     switch (feature) {
       case 'notes':
         return <CollaborativeNotes roomId={roomId || ''} />;
       case 'chat':
-        return <ChatRoom roomId={roomId || ''} />;
+        return <ChatRoom roomId={roomId || ''} roomName={room?.name} />;
       case 'aichat':
         return <AIChatAssistant roomId={roomId || ''} />;
       case 'video':
@@ -612,6 +613,8 @@ const StudyRoomView: React.FC = () => {
         return <PollSystem roomId={roomId || ''} />;
       case 'whiteboard':
         return <Whiteboard roomId={roomId || ''} />;
+      case 'pdfs':
+        return <PdfDiscussion roomId={roomId || ''} />;
       case 'youtube':
         return (
           <YoutubeWatchTogether 
@@ -688,6 +691,8 @@ const StudyRoomView: React.FC = () => {
         return 'Whiteboard';
       case 'youtube':
         return 'Watch Together';
+      case 'pdfs':
+        return 'PDF Discussion';
     }
   };
   
@@ -861,6 +866,15 @@ const StudyRoomView: React.FC = () => {
             >
               <span className="icon">📂</span>
               {!sidebarMinimized && <span className="label">File Sharing</span>}
+            </button>
+            
+            <button
+              onClick={() => changeActiveFeature('pdfs')}
+              className={`sidebar-btn ${activeFeature === 'pdfs' ? 'active' : ''}`}
+              title="PDF Discussion"
+            >
+              <span className="icon">📄</span>
+              {!sidebarMinimized && <span className="label">PDF Discussion</span>}
             </button>
             
             <button
