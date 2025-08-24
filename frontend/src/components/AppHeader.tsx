@@ -162,6 +162,16 @@ const AppHeader: React.FC<AppHeaderProps> = ({
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
+            <DropdownMenuItem
+              className="hover:bg-blue-50/50"
+              onClick={() => navigate('/coding-ide')}
+            >
+              <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 3H7a2 2 0 00-2 2v16a2 2 0 002 2h10a2 2 0 002-2V7.5L14 3H8z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 9l3 3m0 0l3 3m-3-3l-3 3m3-3l3-3" />
+              </svg>
+              <span>Coding IDE</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -207,6 +217,15 @@ const AppHeader: React.FC<AppHeaderProps> = ({
             >
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              className="hover:bg-blue-50/50" 
+              onClick={() => navigate('/coding-ide')}
+            >
+              <svg className="mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              <span>Coding IDE</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator className="bg-gray-200/50" />
             <DropdownMenuItem 

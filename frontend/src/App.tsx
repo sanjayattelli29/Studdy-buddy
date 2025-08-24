@@ -10,6 +10,7 @@ import StudyRooms from './pages/StudyRooms';
 import CreateRoom from './pages/CreateRoom';
 import StudyRoomView from './pages/StudyRoomView';
 import Admin from './pages/Admin';
+import CodingIDE from './pages/CodingIDE';
 import './App.css';
 import { useState } from 'react';
 import Preloader from './components/ui/preloader';
@@ -69,6 +70,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              
+              <Route
+                path="/coding-ide"
+                element={
+                  <ProtectedRoute>
+                    <CodingIDE />
                   </ProtectedRoute>
                 }
               />

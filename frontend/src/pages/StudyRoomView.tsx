@@ -12,6 +12,7 @@ import YoutubeWatchTogether from '../components/YoutubeWatchTogether/YoutubeWatc
 import AIChatAssistant from '../components/AI/AIChatAssistant';
 import VideoRoom from '../components/VideoCall/VideoRoom';
 import PdfDiscussion from '../components/PdfDiscussion';
+import CodingIDE from '../components/CodingIDE';
 import { db } from '../lib/firebase';
 import { doc, getDoc, onSnapshot, updateDoc, setDoc } from 'firebase/firestore';
 
@@ -27,7 +28,7 @@ import { StudyRoom } from '../types/studyRoom';
 import './StudyRoomView.css';
 
 
-type Feature = 'notes' | 'files' | 'timer' | 'tasks' | 'polls' | 'whiteboard' | 'youtube' | 'chat' | 'aichat' | 'video' | 'pdfs';
+type Feature = 'notes' | 'files' | 'timer' | 'tasks' | 'polls' | 'whiteboard' | 'youtube' | 'chat' | 'aichat' | 'video' | 'pdfs' | 'codingide';
 
 // Timer mode type
 type TimerMode = 'work' | 'shortBreak' | 'longBreak';
@@ -568,7 +569,7 @@ const StudyRoomView: React.FC = () => {
   // Handle feature change
   const changeActiveFeature = (feature: Feature) => {
     // Validate feature
-    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video', 'pdfs'];
+    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video', 'pdfs', 'codingide'];
     if (!validFeatures.includes(feature)) {
       console.warn(`Invalid feature: ${feature}. Defaulting to 'notes'.`);
       feature = 'notes';
@@ -591,7 +592,7 @@ const StudyRoomView: React.FC = () => {
   
   const renderFeatureContent = () => {
     // Add type guard to ensure activeFeature is a valid Feature
-    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video', 'pdfs'];
+    const validFeatures: Feature[] = ['notes', 'files', 'timer', 'tasks', 'polls', 'whiteboard', 'youtube', 'chat', 'aichat', 'video', 'pdfs', 'codingide'];
     const feature = validFeatures.includes(activeFeature) ? activeFeature : 'notes';
 
     switch (feature) {
@@ -615,6 +616,8 @@ const StudyRoomView: React.FC = () => {
         return <Whiteboard roomId={roomId || ''} />;
       case 'pdfs':
         return <PdfDiscussion roomId={roomId || ''} />;
+      case 'codingide':
+        return <CodingIDE roomId={roomId || ''} />;
       case 'youtube':
         return (
           <YoutubeWatchTogether 
@@ -693,6 +696,8 @@ const StudyRoomView: React.FC = () => {
         return 'Watch Together';
       case 'pdfs':
         return 'PDF Discussion';
+      case 'codingide':
+        return 'Coding IDE';
     }
   };
   
@@ -920,6 +925,15 @@ const StudyRoomView: React.FC = () => {
             >
               <span className="icon">📺</span>
               {!sidebarMinimized && <span className="label">Watch Together</span>}
+            </button>
+            
+            <button
+              onClick={() => changeActiveFeature('codingide')}
+              className={`sidebar-btn ${activeFeature === 'codingide' ? 'active' : ''}`}
+              title="Python Coding IDE"
+            >
+              <span className="icon">🐍</span>
+              {!sidebarMinimized && <span className="label">Coding IDE</span>}
             </button>
           </div>
 

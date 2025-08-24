@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import AppHeader from '../components/AppHeader';
+import StudyRoomsSidebar from '../components/StudyRoomsSidebar';
 import { 
   getPublicStudyRooms, 
   getJoinedRooms,
@@ -30,6 +31,7 @@ const StudyRooms: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Fetch all room types
   const fetchRooms = async () => {
@@ -211,11 +213,22 @@ const StudyRooms: React.FC = () => {
     return (
       <div className="study-room-card" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
         <div className="room-header">
-          <h3 style={{ fontWeight: 700, color: '#1F2937' }}>{room.name}</h3>
+          <h3 style={{ fontWeight: 700, color: '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{room.name}</h3>
           {room.isPrivate && <span className="private-badge" style={{ fontWeight: 600 }}>Private</span>}
         </div>
         <p className="room-subject" style={{ fontWeight: 600, color: '#4B5563' }}>{room.subject}</p>
-        <p className="room-description" style={{ fontWeight: 500, color: '#4B5563' }}>{room.description}</p>
+        <p className="room-description" style={{ 
+          fontWeight: 500, 
+          color: '#4B5563', 
+          overflow: 'hidden',
+          display: '-webkit-box',
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: 'vertical',
+          marginBottom: '10px'
+        }}>{room.description}</p>
+        
+        <div style={{ flex: 1 }}></div>
+        
         <div className="room-details">
           <div className="room-info">
             <span className="detail" style={{ fontWeight: 500 }}>
@@ -227,12 +240,13 @@ const StudyRooms: React.FC = () => {
           </div>
           
           {room.tags && room.tags.length > 0 && (
-            <div className="room-tags flex justify-center gap-2 pb-4">
-              {room.tags.map((tag, index) => (
+            <div className="room-tags flex justify-center gap-2 pb-2">
+              {room.tags.slice(0, 3).map((tag, index) => (
                 <span key={index} className="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-full">
                   {tag}
                 </span>
               ))}
+              {room.tags.length > 3 && <span className="text-xs text-gray-500">+{room.tags.length - 3}</span>}
             </div>
           )}
         </div>
@@ -297,28 +311,38 @@ const StudyRooms: React.FC = () => {
     );
   };
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
   return (
-    <div className="study-rooms-container">
-      <AppHeader 
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        handleSearch={handleSearch}
-        joinCode={joinCode}
-        setJoinCode={setJoinCode}
-        handleJoinByCode={handleJoinByCode}
-        isJoining={isJoining}
+    <div className={`study-rooms-container ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <StudyRoomsSidebar 
+        isCollapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
       />
       
-      <div className="study-rooms-content">
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="error-message"
-          >
-            {error}
-          </motion.div>
-        )}
+      <div className="study-rooms-main">
+        <AppHeader 
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          handleSearch={handleSearch}
+          joinCode={joinCode}
+          setJoinCode={setJoinCode}
+          handleJoinByCode={handleJoinByCode}
+          isJoining={isJoining}
+        />
+        
+        <div className="study-rooms-content">
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="error-message"
+            >
+              {error}
+            </motion.div>
+          )}
 
         {/* Hero Section */}
         <motion.div 
@@ -381,6 +405,7 @@ const StudyRooms: React.FC = () => {
             )}
           </>
         )}
+        </div>
       </div>
     </div>
   );
