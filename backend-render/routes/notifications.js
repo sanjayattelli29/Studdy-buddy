@@ -142,9 +142,9 @@ This notification was sent because you were mentioned in a StudyBuddy study room
 StudyBuddy - Your collaborative study companion
     `;
 
-    // Send email
+    // Send email with the actual sender's name
     const mailOptions = {
-      from: `"StudyBuddy" <${EMAIL_USER}>`,
+      from: `"${mentionedByName} (StudyBuddy)" <${EMAIL_USER}>`,
       to: recipientEmail,
       subject: subject,
       text: textContent,
@@ -153,17 +153,24 @@ StudyBuddy - Your collaborative study companion
 
     const info = await transporter.sendMail(mailOptions);
     
-    console.log('Mention notification sent successfully:', info.messageId);
+    console.log(`✉️ Mention notification sent successfully:`, {
+      messageId: info.messageId,
+      from: mentionedByName,
+      to: recipientEmail,
+      room: roomTitle
+    });
 
     res.json({
       success: true,
       message: 'Mention notification sent successfully',
       messageId: info.messageId,
-      recipient: recipientEmail
+      recipient: recipientEmail,
+      sender: mentionedByName,
+      room: roomTitle
     });
 
   } catch (error) {
-    console.error('Error sending mention notification:', error);
+    console.error(`❌ Error sending mention notification from ${mentionedByName} to ${recipientEmail}:`, error);
     res.status(500).json({
       error: 'Failed to send notification',
       message: error.message,
@@ -248,9 +255,9 @@ This notification was sent from StudyBuddy.
 StudyBuddy - Your collaborative study companion
     `;
 
-    // Send email
+    // Send email with sender's name if provided
     const mailOptions = {
-      from: `"StudyBuddy" <${EMAIL_USER}>`,
+      from: senderName ? `"${senderName} (StudyBuddy)" <${EMAIL_USER}>` : `"StudyBuddy" <${EMAIL_USER}>`,
       to: recipientEmail,
       subject: `${subject} - StudyBuddy`,
       text: textContent,
