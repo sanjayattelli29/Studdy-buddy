@@ -64,19 +64,18 @@ const PdfViewer: React.FC<PdfViewerProps> = ({ pdfUrl, fileName, onClose }) => {
 
   // Create a viewer-friendly URL with multiple fallback options
   const getViewerUrl = (url: string, method: 'iframe' | 'object' | 'download') => {
-    if (url.includes('r2.cloudflarestorage.com')) {
-      switch (method) {
-        case 'iframe':
-          // Use the direct R2 URL first - most browsers can handle PDF directly
-          return url;
-        case 'object':
-          // R2 URLs work directly for PDFs
-          return url;
-        case 'download':
-          // For download, add appropriate headers via query params if needed
-          return url;
-      }
+    // Our backend serve endpoint URLs should work directly for all methods
+    if (url.includes('/api/r2/serve/')) {
+      return url; // Use the URL as-is since our backend handles CORS and proper headers
     }
+    
+    // Legacy direct R2 URLs (convert these to serve endpoint)
+    if (url.includes('r2.cloudflarestorage.com')) {
+      console.warn('Using legacy direct R2 URL, should be converted to serve endpoint');
+      // These may not work due to CORS/auth issues, but try anyway
+      return url;
+    }
+    
     return url;
   };
 
@@ -381,15 +380,57 @@ const PdfDiscussion: React.FC<PdfDiscussionProps> = ({ roomId }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
+  // Utility function to convert old direct R2 URLs to our backend serve endpoint
+  const convertPdfUrl = (originalUrl: string, publicId: string): string => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+    
+    // If it's already our serve URL, return as is
+    if (originalUrl.includes('/api/r2/serve/')) {
+      return originalUrl;
+    }
+    
+    // If it's a direct R2 URL, convert to use our serve endpoint
+    if (originalUrl.includes('r2.cloudflarestorage.com')) {
+      return `${API_BASE_URL}/r2/serve/${encodeURIComponent(publicId)}`;
+    }
+    
+    // If it's some other URL format, try to use publicId with serve endpoint
+    if (publicId) {
+      return `${API_BASE_URL}/r2/serve/${encodeURIComponent(publicId)}`;
+    }
+    
+    // Fallback to original URL
+    return originalUrl;
+  };
+
   const openPdfInNewTab = (url: string, fileName: string) => {
+    // Convert old R2 URLs to use our serve endpoint
+    const file = pdfFiles.find(f => f.url === url);
+    const convertedUrl = file ? convertPdfUrl(url, file.publicId) : url;
+    
+    console.log('Opening PDF:', {
+      originalUrl: url,
+      convertedUrl: convertedUrl,
+      publicId: file?.publicId
+    });
+    
     // Open PDF in modal viewer for better user experience
-    setViewingPdf({ url, name: fileName });
+    setViewingPdf({ url: convertedUrl, name: fileName });
   };
 
   const openPdfInBrowserTab = (url: string) => {
-    // For PDFs uploaded to R2, open directly
-    // R2 URLs work well with browser PDF viewers
-    window.open(url, '_blank');
+    // Convert old R2 URLs to use our serve endpoint
+    const file = pdfFiles.find(f => f.url === url);
+    const convertedUrl = file ? convertPdfUrl(url, file.publicId) : url;
+    
+    console.log('Opening PDF in browser tab:', {
+      originalUrl: url,
+      convertedUrl: convertedUrl,
+      publicId: file?.publicId
+    });
+    
+    // Open using our backend serve endpoint
+    window.open(convertedUrl, '_blank');
   };
 
   return (

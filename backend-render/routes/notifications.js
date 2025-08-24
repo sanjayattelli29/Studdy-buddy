@@ -1,6 +1,9 @@
 const express = require('express');
 const nodemailer = require('nodemailer');
 
+// Ensure environment variables are loaded
+require('dotenv').config();
+
 const router = express.Router();
 
 // Email configuration

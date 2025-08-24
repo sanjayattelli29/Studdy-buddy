@@ -17,7 +17,8 @@ app.use(cors({
   origin: [
     'http://localhost:5173', 
     'http://localhost:3000', 
-    'http://localhost:8081',
+    'http://localhost:8080',
+    'https://study-buddy-29.netlify.app',
     process.env.FRONTEND_URL
   ].filter(Boolean), // Remove any undefined values
   credentials: true
@@ -49,6 +50,7 @@ app.get('/health', (req, res) => {
       'R2 Delete': 'DELETE /api/r2/delete/:filePath',
       'R2 List': 'GET /api/r2/list/:folder',
       'R2 Info': 'GET /api/r2/info/:filePath',
+      'R2 Serve File': 'GET /api/r2/serve/:filePath',
       'Send Mention': 'POST /api/notifications/send-mention',
       'Send Notification': 'POST /api/notifications/send-notification',
       'Test Email': 'POST /api/notifications/test',

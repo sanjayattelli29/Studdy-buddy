@@ -2,6 +2,9 @@ const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
 
+// Ensure environment variables are loaded
+require('dotenv').config();
+
 const router = express.Router();
 
 // Configure multer for memory storage
@@ -68,8 +71,11 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     
     const result = await s3.upload(uploadParams).promise();
     
-    // Generate public URL
-    const publicUrl = `${R2_ENDPOINT}/${filePath}`;
+    // Generate public URL that serves through our API instead of direct R2 access
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://${req.get('host')}` 
+      : 'http://localhost:3001';
+    const publicUrl = `${baseUrl}/api/r2/serve/${encodeURIComponent(filePath)}`;
     
     console.log("R2 upload successful:", filePath);
     
@@ -201,6 +207,62 @@ router.get('/info/:filePath(*)', async (req, res) => {
       console.error('Error getting R2 file info:', error);
       res.status(500).json({ 
         error: 'Get file info failed', 
+        message: error.message 
+      });
+    }
+  }
+});
+
+// Serve file endpoint - serves files from R2 through our backend
+router.get('/serve/:filePath(*)', async (req, res) => {
+  try {
+    const filePath = req.params.filePath;
+    
+    if (!filePath) {
+      return res.status(400).json({ error: 'File path is required' });
+    }
+    
+    console.log(`🎯 Serving file from R2: ${filePath}`);
+    console.log(`🌐 Request from: ${req.get('origin') || 'unknown'}`);
+    
+    const getParams = {
+      Bucket: R2_BUCKET_NAME,
+      Key: filePath,
+    };
+    
+    // Get the file from R2
+    const result = await s3.getObject(getParams).promise();
+    
+    console.log(`✅ File found in R2: ${filePath} (${result.ContentLength} bytes)`);
+    
+    // Set appropriate headers
+    res.set({
+      'Content-Type': result.ContentType || 'application/pdf',
+      'Content-Length': result.ContentLength,
+      'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      'Content-Disposition': `inline; filename="${result.Metadata?.originalName || filePath.split('/').pop()}"`,
+      'Access-Control-Allow-Origin': '*', // Allow CORS for PDF viewing
+      'Access-Control-Allow-Methods': 'GET',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    });
+    
+    // Stream the file data
+    res.send(result.Body);
+    
+    console.log(`🚀 File served successfully: ${filePath}`);
+    
+  } catch (error) {
+    console.error('❌ Error serving file from R2:', error);
+    
+    if (error.code === 'NoSuchKey') {
+      console.log(`🔍 File not found in R2: ${req.params.filePath}`);
+      res.status(404).json({ 
+        error: 'File not found', 
+        filePath: req.params.filePath 
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to serve file', 
         message: error.message 
       });
     }
