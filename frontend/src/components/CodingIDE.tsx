@@ -207,23 +207,27 @@ const CodingIDE: React.FC<CodingIDEProps> = ({ roomId }) => {
         ],
       };
       
-      // Call Groq API (replace this with your actual Groq API implementation)
+      // Call Groq API with updated parameters
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API_KEY}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_GROQ_API2_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: "llama3-70b-8192",
+          model: "llama-3.3-70b-versatile", // Updated to current model name
           messages: prompt.messages,
-          temperature: 0.5,
-          max_tokens: 1024,
+          temperature: 0.7,
+          max_completion_tokens: 1024, // Changed from max_tokens to max_completion_tokens
+          top_p: 1,
         }),
       });
       
       if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error?.message || `API request failed: ${response.status}`;
+        console.error('Groq API error:', errorData);
+        throw new Error(errorMessage);
       }
       
       const result = await response.json();
